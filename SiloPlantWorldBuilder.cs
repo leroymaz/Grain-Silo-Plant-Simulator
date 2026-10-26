@@ -1,6 +1,3 @@
-
-using UnityEngine;
-
 public class SiloPlantWorldBuilder : MonoBehaviour
 {
     public bool buildOnStart = true;
