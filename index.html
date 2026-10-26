@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#153d2b" />
+  <title>GrainWise | Silo Plant Simulator</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">🌾</div>
+        <div><strong>GrainWise</strong><small>PLANT SIMULATOR</small></div>
+      </div>
+      <div class="operator-card">
+        <div class="operator-avatar">OP</div>
+        <div><strong>Plant Operator</strong><small>Training mode</small></div>
+        <span class="status-dot"></span>
+      </div>
+      <nav class="nav-list" aria-label="Main navigation">
+        <button class="nav-item active" data-view="dashboard">▦ <span>Dashboard</span></button>
+        <button class="nav-item" data-view="plant">⌘ <span>Plant map</span></button>
+        <button class="nav-item" data-view="inventory">▤ <span>Inventory</span></button>
+        <button class="nav-item" data-view="quality">◉ <span>Grain quality</span></button>
+        <button class="nav-item" data-view="equipment">⚙ <span>Equipment & faults</span></button>
+        <button class="nav-item" data-view="missions">✦ <span>Learning missions</span></button>
+        <button class="nav-item" data-view="reports">▥ <span>Event log</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="mode-pill"><span class="pulse"></span> SIMULATION ACTIVE</div>
+        <small>Demo environment · v1.0</small>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <button class="mobile-menu" id="menuToggle" aria-label="Toggle navigation">☰</button>
+        <div>
+          <div class="eyebrow">OPERATIONS / TRAINING ENVIRONMENT</div>
+          <h1 id="pageTitle">Plant dashboard</h1>
+        </div>
+        <div class="top-actions">
+          <span class="clock" id="clock">--:--:--</span>
+          <button class="icon-button" id="alarmButton" title="View alarms" aria-label="View alarms">♢<span class="alarm-badge" id="alarmCount">0</span></button>
+          <button class="primary-button" id="estopButton">■ Emergency stop</button>
+        </div>
+      </header>
+
+      <div class="safety-banner" id="safetyBanner" hidden>⚠ EMERGENCY STOP ACTIVE — transfers are disabled until reset.</div>
+
+      <section class="view active" id="view-dashboard">
+        <div class="welcome-row">
+          <div><h2>Good day, Operator <span>👋</span></h2><p>Monitor grain movement, quality and plant health from one place.</p></div>
+          <div class="date-chip" id="dateChip">TRAINING SIMULATION</div>
+        </div>
+        <div class="metrics-grid">
+          <article class="metric-card"><div class="metric-top"><span>Total stored grain</span><span class="metric-icon">▤</span></div><strong id="totalStock">—</strong><small>tonnes across storage locations</small><div class="mini-bar"><i style="width:72%"></i></div></article>
+          <article class="metric-card"><div class="metric-top"><span>Average grain quality</span><span class="metric-icon">◉</span></div><strong id="qualityMetric">—</strong><small>quality index out of 100</small><div class="mini-bar quality-bar"><i id="qualityBar" style="width:94%"></i></div></article>
+          <article class="metric-card"><div class="metric-top"><span>Equipment health</span><span class="metric-icon">⚙</span></div><strong id="healthMetric">—</strong><small id="healthCaption">equipment operating normally</small><div class="mini-bar health-bar"><i id="healthBar" style="width:100%"></i></div></article>
+          <article class="metric-card"><div class="metric-top"><span>Operator XP</span><span class="metric-icon">✦</span></div><strong id="xpMetric">0 XP</strong><small><span id="creditsMetric">250</span> training credits available</small><div class="mini-bar xp-bar"><i id="xpBar" style="width:10%"></i></div></article>
+        </div>
+
+        <div class="content-grid">
+          <article class="panel plant-panel">
+            <div class="panel-heading"><div><h3>Plant overview</h3><p>Live simulated inventory and route status</p></div><button class="text-button" data-goto="plant">Open plant map ↗</button></div>
+            <div class="plant-flow" id="plantFlow"></div>
+            <div class="legend"><span><i class="legend-green"></i> Available</span><span><i class="legend-gold"></i> Processing</span><span><i class="legend-red"></i> Alarm / stopped</span></div>
+          </article>
+          <article class="panel assistant-panel">
+            <div class="panel-heading"><div><h3>GrainWise assistant</h3><p>Rule-based operational guidance</p></div><span class="ai-tag">AI GUIDE</span></div>
+            <div class="assistant-avatar">✦</div>
+            <div class="assistant-message" id="assistantMessage">Welcome, Operator. Check route connectivity, silo headroom and equipment status before starting a transfer.</div>
+            <div class="assistant-actions">
+              <button class="soft-button" id="checkPlantButton">Run plant check</button>
+              <button class="soft-button" data-goto="equipment">Review equipment</button>
+            </div>
+            <div class="assistant-footer">Advice is simulated and does not control real machinery.</div>
+          </article>
+        </div>
+
+        <div class="content-grid lower-grid">
+          <article class="panel">
+            <div class="panel-heading"><div><h3>Quick transfer</h3><p>Move grain between connected locations</p></div><span class="small-label">SIMULATION</span></div>
+            <form id="transferForm" class="transfer-form">
+              <label>From <select id="sourceSelect"></select></label>
+              <div class="transfer-arrow">→</div>
+              <label>To <select id="destinationSelect"></select></label>
+              <label>Quantity (tonnes) <input id="amountInput" type="number" min="1" max="500" value="20" step="1" required /></label>
+              <button class="primary-button" type="submit">Start transfer</button>
+            </form>
+            <p class="form-note">Transfers are blocked when the plant is stopped, an interlock is active, a route is unavailable, or stock/capacity is insufficient.</p>
+          </article>
+          <article class="panel mission-preview">
+            <div class="panel-heading"><div><h3>Current mission</h3><p>Build safe operating habits</p></div><span class="mission-symbol">✦</span></div>
+            <h4 id="missionTitle">Complete a safe grain transfer</h4>
+            <p id="missionDescription">Move 20 tonnes from the Holding Bin to Silo 1 without triggering a fault.</p>
+            <div class="mission-progress"><span id="missionProgressText">0 / 1 actions</span><div class="progress-track"><i id="missionProgressBar"></i></div></div>
+            <button class="text-button" data-goto="missions">View all missions ↗</button>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" id="view-plant">
+        <div class="section-intro"><div><h2>Plant map</h2><p>Explore the receiving, storage, drying and dispatch flow.</p></div><span class="tag">11 plant locations</span></div>
+        <div class="plant-map" id="fullPlantMap"></div>
+        <article class="panel"><div class="panel-heading"><div><h3>Transfer console</h3><p>Select source, destination and quantity.</p></div></div><div id="plantTransferMount"></div></article>
+      </section>
+
+      <section class="view" id="view-inventory">
+        <div class="section-intro"><div><h2>Grain inventory</h2><p>Current stock levels and available storage capacity.</p></div><span class="tag" id="inventoryTotalTag">— tonnes total</span></div>
+        <article class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>Location</th><th>Stored (t)</th><th>Capacity (t)</th><th>Fill level</th><th>Moisture</th><th>Temperature</th></tr></thead><tbody id="inventoryRows"></tbody></table></div></article>
+        <div class="metrics-grid compact-metrics"><article class="metric-card"><span>Opening stock</span><strong>3,200 t</strong><small>training scenario baseline</small></article><article class="metric-card"><span>Total receipts</span><strong id="receiptsMetric">1,050 t</strong><small>simulated receipts</small></article><article class="metric-card"><span>Total dispatched</span><strong id="dispatchesMetric">0 t</strong><small>simulated dispatches</small></article><article class="metric-card"><span>Recorded losses</span><strong id="lossesMetric">0 t</strong><small>no losses recorded</small></article></div>
+      </section>
+
+      <section class="view" id="view-quality">
+        <div class="section-intro"><div><h2>Grain quality</h2><p>Review simulated moisture, temperature, impurities and quality score.</p></div><span class="tag">QUALITY MONITOR</span></div>
+        <div class="quality-summary">
+          <article class="panel quality-score-panel"><span class="eyebrow">OVERALL QUALITY INDEX</span><strong id="qualityBig">94<span>/100</span></strong><p id="qualitySummary">Grain quality is within the training target.</p><div class="progress-track"><i id="qualityBigBar"></i></div></article>
+          <article class="panel"><h3>Dryer controls</h3><p class="muted">These setpoints are for simulation only.</p><label class="range-label">Dryer air temperature <strong><span id="dryerTempValue">65</span>°C</strong></label><input type="range" min="35" max="85" value="65" id="dryerTempRange" /><label class="range-label">Furnace setpoint <strong><span id="furnaceTempValue">180</span>°C</strong></label><input type="range" min="100" max="250" value="180" id="furnaceTempRange" /><button class="primary-button" id="applyDryerButton">Apply setpoints</button></article>
+        </div>
+        <article class="panel table-panel"><div class="panel-heading"><div><h3>Location quality readings</h3><p>Illustrative values that update with simulation actions.</p></div></div><div class="table-wrap"><table><thead><tr><th>Location</th><th>Moisture</th><th>Temperature</th><th>Impurities</th><th>Quality</th><th>Status</th></tr></thead><tbody id="qualityRows"></tbody></table></div></article>
+      </section>
+
+      <section class="view" id="view-equipment">
+        <div class="section-intro"><div><h2>Equipment & faults</h2><p>Inspect equipment, simulate faults and practice safe recovery.</p></div><button class="primary-button" id="clearFaultsButton">Clear recoverable faults</button></div>
+        <div class="equipment-grid" id="equipmentGrid"></div>
+        <article class="panel fault-console"><div><h3>Fault injection console</h3><p class="muted">Use these controls for training scenarios. Faults stop or restrict simulated transfers.</p></div><div class="fault-controls"><label>Fault type<select id="faultSelect"><option value="Conveyor blockage">Conveyor blockage</option><option value="Belt slip">Belt slip</option><option value="Level sensor failure">Level sensor failure</option><option value="Elevator bearing warning">Elevator bearing warning</option><option value="Dryer overheat">Dryer overheat</option><option value="Gate mismatch">Gate mismatch</option></select></label><button class="danger-button" id="injectFaultButton">Inject training fault</button></div><div class="equipment-actions"><button class="soft-button" id="plantStartButton">Start plant</button><button class="soft-button" id="plantStopButton">Stop plant</button><button class="soft-button" id="resetSafetyButton">Reset emergency stop</button></div></article>
+      </section>
+
+      <section class="view" id="view-missions">
+        <div class="section-intro"><div><h2>Learning missions</h2><p>Practice core grain plant operations and earn operator experience.</p></div><span class="tag" id="missionXpTag">0 XP earned</span></div>
+        <div class="missions-grid" id="missionsGrid"></div>
+      </section>
+
+      <section class="view" id="view-reports">
+        <div class="section-intro"><div><h2>Event log</h2><p>Chronological record of simulation actions, warnings and transfers.</p></div><button class="soft-button" id="exportLogButton">Export CSV</button></div>
+        <article class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>Time</th><th>Type</th><th>Event</th><th>Details</th></tr></thead><tbody id="logRows"></tbody></table></div></article>
+      </section>
+
+      <footer class="app-footer"><span>🌾 GrainWise Plant Simulator</span><span>Browser prototype · Training use only · Not for real machinery control</span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
